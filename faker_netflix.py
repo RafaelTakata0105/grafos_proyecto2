@@ -22,7 +22,7 @@ class Netflix:
                     )   
             self.session.run(query)
             print(f'El nodo con id: {num_id} ha sido creado exitosamente')
-        self.driver.close()
+        
 
     def create_relationships(self, num_relationships):
         movies_ids = [record["id"] for record in self.session.run("MATCH (m:Movie) RETURN m.id AS id")]
