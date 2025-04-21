@@ -27,8 +27,9 @@ class Netflix:
     def create_relationships(self, num_relationships):
         movies_ids = [record["id"] for record in self.session.run("MATCH (m:Movie) RETURN m.id AS id")]
         profiles_ids = [record["id"] for record in self.session.run("MATCH (p:Profile) RETURN p.id AS id")]
+        movies_ids_spec = movies_ids[10:21]
         with self.session.begin_transaction() as tx:
-            for i in range(num_relationships):
+            for i in range(3*num_relationships/4):
                 profile = random.choice(profiles_ids)
                 movie = random.choice(movies_ids)
                 
@@ -37,5 +38,15 @@ class Netflix:
                 MERGE (p)-[:ADD]->(m)
                 """
                 tx.run(query_rel, profile_id=profile, movie_id=movie)
-
+                
+            #Peliculas especificas
+            for i in range(num_relationships/4):
+                profile = random.choice(profiles_ids)
+                movie = random.choice(movies_ids_spec)
+                
+                query_rel = """
+                MATCH (p:Profile {id: $profile_id}), (m:Movie {id: $movie_id})
+                MERGE (p)-[:ADD]->(m)
+                """
+                tx.run(query_rel, profile_id=profile, movie_id=movie)
         print('Relaciones creadas exitosamente')
