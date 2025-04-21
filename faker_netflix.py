@@ -29,7 +29,7 @@ class Netflix:
         profiles_ids = [record["id"] for record in self.session.run("MATCH (p:Profile) RETURN p.id AS id")]
         movies_ids_spec = movies_ids[10:21]
         with self.session.begin_transaction() as tx:
-            for i in range(3*num_relationships/4):
+            for i in range(round(3*num_relationships+1/4)):
                 profile = random.choice(profiles_ids)
                 movie = random.choice(movies_ids)
                 
@@ -38,9 +38,9 @@ class Netflix:
                 MERGE (p)-[:ADD]->(m)
                 """
                 tx.run(query_rel, profile_id=profile, movie_id=movie)
-                
+
             #Peliculas especificas
-            for i in range(num_relationships/4):
+            for i in range(round(num_relationships+1/4)):
                 profile = random.choice(profiles_ids)
                 movie = random.choice(movies_ids_spec)
                 
