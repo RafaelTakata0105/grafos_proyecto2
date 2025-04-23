@@ -11,8 +11,13 @@ CALL db.schema.visualization
 MATCH (p:Profile)-[a:ADD]->(m:Movie)
 RETURN p, a, m
 
-//Creamos la relación, vistas por la misma persona
+//Modificar dateAdded a Date
+MATCH(m:Movie)
+SET m.dateAdded = DATE(m.dateAdded)
+RETURN m.dateAdded
 
+//Creamos la relación, vistas por la misma persona
+//Debido al gasto computacional que implica, lo hacemos por partes:
 CALL apoc.periodic.iterate(
   "
   MATCH (p:Profile)-[:ADD]->(shared:Movie)
@@ -106,3 +111,53 @@ CALL gds.nodeSimilarity.write('myGraph', {
 })
 YIELD nodesCompared, relationshipsWritten
 
+//NeoDash de Vistas_Juntas
+//Centralidad
+MATCH(m:Movie)
+RETURN m.title, m.pagerank
+ORDER BY m.pagerank DESC
+LIMIT 5
+
+MATCH(m:Movie)
+RETURN m.releaseYear, SUM(m.betweennessCentrality) AS Total_Betweenness
+ORDER BY Total_Betweenness DESC
+
+
+MATCH(m:Movie)
+RETURN m.dateAdded.year, AVG(m.closenessCentrality) AS average_closeness
+ORDER BY average_closeness DESC
+LIMIT 10
+
+MATCH (m:Movie)
+RETURN AVG(m.degree) AS degreePromedio
+
+//Community
+MATCH(m:Movie)
+RETURN m.louvain AS community, COUNT(m.title) AS total_movies, COLLECT(m.title) AS titles
+ORDER BY total_movies DESC
+
+MATCH (m:Movie)
+RETURN m.labelPropagation, COUNT(m.title) AS total_movies
+ORDER BY total_movies DESC
+LIMIT 10
+
+MATCH(m:Movie)
+RETURN m.communityWCC, COUNT(m.title) AS total_movies
+ORDER BY total_movies DESC
+LIMIT 10
+
+MATCH(m:Movie)
+RETURN COUNT(DISTINCT m.communitySCC) AS diff_communities
+
+//Similarity
+MATCH (m:Movie)-[s:SIMILAR]->(om:Movie)
+RETURN m.title, SUM(s.score) AS total_score, COLLECT(om.title)
+ORDER BY total_score DESC
+LIMIT 10
+
+MATCH(m:Movie{title:$neodash_movie_title})-[s:SIMILAR]->(om:Movie)
+RETURN s.score, om.title
+LIMIT 10
+
+MATCH p =(m:Movie{title:$neodash_movie_title})-[s:SIMILAR]->(om:Movie)
+RETURN p
