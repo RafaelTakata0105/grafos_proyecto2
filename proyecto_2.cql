@@ -252,3 +252,87 @@ LIMIT 10
 
 MATCH p =(m:Movie{title:$neodash_movie_title})-[s:SIMILAR]->(om:Movie)
 RETURN p
+
+// 16 recomendaciones de películas basadas en algoritmos
+// PageRank
+MATCH (m:Movie)-[:VISTAS_JUNTAS]-(mo:Movie)
+WHERE m.title = $neodash_movie_title
+RETURN mo.title AS Recomendacion, mo.pagerank AS Popularidad
+ORDER BY mo.pagerank DESC
+LIMIT 5;
+
+// BetweennessCentrality
+MATCH (m:Movie)-[:VISTAS_JUNTAS]-(mo:Movie)
+WHERE m.title = $neodash_movie_title
+RETURN mo.title AS Recomendacion, mo.betweennessCentrality AS Popularidad
+ORDER BY mo.betweennessCentrality DESC
+LIMIT 5;
+
+// ClosenessCentrality
+MATCH (m:Movie)-[:VISTAS_JUNTAS]-(mo:Movie)
+WHERE m.title = $neodash_movie_title
+RETURN mo.title AS Recomendacion, mo.closenessCentrality AS Popularidad
+ORDER BY mo.closenessCentrality DESC
+LIMIT 5;
+
+// Degree
+MATCH (m:Movie)-[:VISTAS_JUNTAS]-(mo:Movie)
+WHERE m.title = $neodash_movie_title
+RETURN mo.title AS Recomendacion, mo.degree AS Popularidad
+ORDER BY mo.degree DESC
+LIMIT 5;
+
+// WCC
+MATCH (m:Movie {title: $neodash_movie_title})
+WITH m, m.communityWCC AS wcc
+
+MATCH (m)-[:VISTAS_JUNTAS]-(mo:Movie)
+WHERE mo.communityWCC = wcc AND mo.title <> $neodash_movie_title
+
+RETURN mo.title AS recomendacion, 
+       mo.pagerank AS popularidad
+ORDER BY popularidad DESC
+LIMIT 5;
+
+// SCC
+MATCH (m:Movie {title: $neodash_movie_title})
+WITH m, m.communitySCC AS scc
+
+MATCH (m)-[:VISTAS_JUNTAS]-(mo:Movie)
+WHERE mo.communitySCC = scc AND mo.title <> $neodash_movie_title
+
+RETURN mo.title AS recomendacion, 
+       mo.pagerank AS popularidad
+ORDER BY popularidad DESC
+LIMIT 5;
+
+// Louvain
+MATCH (m:Movie {title: $neodash_movie_title})
+WITH m, m.louvain AS comunidad
+
+MATCH (m)-[:VISTAS_JUNTAS]-(mo:Movie)
+WHERE mo.louvain = comunidad AND mo.title <> $neodash_movie_title
+
+RETURN mo.title AS recomendacion, 
+       mo.pagerank AS popularidad
+ORDER BY popularidad DESC
+LIMIT 5;
+
+// LabelPropagation
+MATCH (m:Movie {title: $neodash_movie_title})
+WITH m, m.labelPropagation AS comunidad
+
+MATCH (m)-[:VISTAS_JUNTAS]-(mo:Movie)
+WHERE mo.labelPropagation = comunidad AND mo.title <> $neodash_movie_title
+
+RETURN mo.title AS recomendacion, 
+       mo.pagerank AS popularidad
+ORDER BY popularidad DESC
+LIMIT 5;
+
+// Peliculas similares
+MATCH (m:Movie {title: $neodash_movie_title})-[s:SIMILAR]->(mo:Movie)
+RETURN mo.title AS recomendacion, 
+       s.score AS score
+ORDER BY score DESC
+LIMIT 5;
