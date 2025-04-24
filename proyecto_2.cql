@@ -41,15 +41,42 @@ WITH nombreCategoria, COLLECT(tituloPelicula) AS listaPeliculas
 RETURN nombreCategoria AS categoria, listaPeliculas[0..5] AS peliculas
 
 //Recomendación basada en país
-MATCH (perfil:Profile)-[:ADD]->(pelicula:Movie)-[:LISTED_IN]->(categoria:Category)
-WITH categoria.name AS nombreCategoria, pelicula.title AS tituloPelicula, COUNT(*) AS totalVistas
+MATCH (perfil:Profile)-[:ADD]->(pelicula:Movie)-[:FROM]->(pais:Country)
+WITH pais.name AS nombreCategoria, pelicula.title AS tituloPelicula, COUNT(*) AS totalVistas
 ORDER BY nombreCategoria, totalVistas DESC
 WITH nombreCategoria, COLLECT(tituloPelicula) AS listaPeliculas
 RETURN nombreCategoria AS categoria, listaPeliculas[0..5] AS peliculas
 
 //Recomendación basada en actor de mi elección
+MATCH (actor:Person {name: "Xolile Tshabalala"})-[:ACTED_IN]->(:Movie)-[:LISTED_IN]->(categoria:Category)<-[:LISTED_IN]-(pelicula:Movie)<-[:ADD]-(perfil:Profile)
+WITH pelicula, COUNT(*) AS vistas
+ORDER BY vistas DESC
+RETURN pelicula.title AS titulo, vistas
+LIMIT 5
+
 //Recomendación basada en director de mi elección
+MATCH (director:Person {name: "Alice Waddington"})-[:DIRECTED]->(:Movie)-[:LISTED_IN]->(categoria:Category)<-[:LISTED_IN]-(pelicula:Movie)<-[:ADD]-(perfil:Profile)
+WITH pelicula, COUNT(*) AS vistas
+ORDER BY vistas DESC
+RETURN pelicula.title AS titulo, vistas
+LIMIT 5
+
 //Recomendación basada en año de lanzamamiento
+MATCH (year:Movie {releaseYear: 2021})-[:LISTED_IN]->(categoria:Category)<-[:LISTED_IN]-(pelicula:Movie)<-[:ADD]-(perfil:Profile)
+with pelicula, COUNT(*) as vistas
+ORDER BY vistas DESC
+RETURN pelicula.title as titulo, vistas
+LIMIT 5
+
+MATCH (p:Profile)-[:ADD]->(shared:Movie)
+MATCH (p)-[:ADD]->(om:Movie)
+WHERE shared > om 
+WITH shared, om, count(*) AS vistas_por_otro.
+MERGE (shared)-[r:VISTAS_JUNTAS]->(om)
+SET r.qty = vistas_por_otro
+RETURN shared.title, om.title, r.qty
+
+//Recomendaciones
 
 //Creamos el subgrafo
 //Dirigido
