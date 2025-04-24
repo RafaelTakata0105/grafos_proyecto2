@@ -33,6 +33,16 @@ CALL apoc.periodic.iterate(
   {batchSize: 1000, parallel: false}
 )
 
+MATCH (p:Profile)-[:ADD]->(shared:Movie)
+MATCH (p)-[:ADD]->(om:Movie)
+WHERE shared > om 
+WITH shared, om, count(*) AS vistas_por_otro.
+MERGE (shared)-[r:VISTAS_JUNTAS]->(om)
+SET r.qty = vistas_por_otro
+RETURN shared.title, om.title, r.qty
+
+//Recomendaciones
+
 //Creamos el subgrafo
 //Dirigido
 CALL gds.graph.project(
