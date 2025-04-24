@@ -33,6 +33,24 @@ CALL apoc.periodic.iterate(
   {batchSize: 1000, parallel: false}
 )
 
+//Recomendación basada en categoria
+MATCH (perfil:Profile)-[:ADD]->(pelicula:Movie)-[:LISTED_IN]->(categoria:Category)
+WITH categoria.name AS nombreCategoria, pelicula.title AS tituloPelicula, COUNT(*) AS totalVistas
+ORDER BY nombreCategoria, totalVistas DESC
+WITH nombreCategoria, COLLECT(tituloPelicula) AS listaPeliculas
+RETURN nombreCategoria AS categoria, listaPeliculas[0..5] AS peliculas
+
+//Recomendación basada en país
+MATCH (perfil:Profile)-[:ADD]->(pelicula:Movie)-[:LISTED_IN]->(categoria:Category)
+WITH categoria.name AS nombreCategoria, pelicula.title AS tituloPelicula, COUNT(*) AS totalVistas
+ORDER BY nombreCategoria, totalVistas DESC
+WITH nombreCategoria, COLLECT(tituloPelicula) AS listaPeliculas
+RETURN nombreCategoria AS categoria, listaPeliculas[0..5] AS peliculas
+
+//Recomendación basada en actor de mi elección
+//Recomendación basada en director de mi elección
+//Recomendación basada en año de lanzamamiento
+
 //Creamos el subgrafo
 //Dirigido
 CALL gds.graph.project(
