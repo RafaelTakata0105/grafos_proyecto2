@@ -33,41 +33,6 @@ CALL apoc.periodic.iterate(
   {batchSize: 1000, parallel: false}
 )
 
-//Recomendación basada en categoria
-MATCH (perfil:Profile)-[:ADD]->(pelicula:Movie)-[:LISTED_IN]->(categoria:Category)
-WITH categoria.name AS nombreCategoria, pelicula.title AS tituloPelicula, COUNT(*) AS totalVistas
-ORDER BY nombreCategoria, totalVistas DESC
-WITH nombreCategoria, COLLECT(tituloPelicula) AS listaPeliculas
-RETURN nombreCategoria AS categoria, listaPeliculas[0..5] AS peliculas
-
-//Recomendación basada en país
-MATCH (perfil:Profile)-[:ADD]->(pelicula:Movie)-[:FROM]->(pais:Country)
-WITH pais.name AS nombreCategoria, pelicula.title AS tituloPelicula, COUNT(*) AS totalVistas
-ORDER BY nombreCategoria, totalVistas DESC
-WITH nombreCategoria, COLLECT(tituloPelicula) AS listaPeliculas
-RETURN nombreCategoria AS categoria, listaPeliculas[0..5] AS peliculas
-
-//Recomendación basada en actor de mi elección
-MATCH (actor:Person {name: "Xolile Tshabalala"})-[:ACTED_IN]->(:Movie)-[:LISTED_IN]->(categoria:Category)<-[:LISTED_IN]-(pelicula:Movie)<-[:ADD]-(perfil:Profile)
-WITH pelicula, COUNT(*) AS vistas
-ORDER BY vistas DESC
-RETURN pelicula.title AS titulo, vistas
-LIMIT 5
-
-//Recomendación basada en director de mi elección
-MATCH (director:Person {name: "Alice Waddington"})-[:DIRECTED]->(:Movie)-[:LISTED_IN]->(categoria:Category)<-[:LISTED_IN]-(pelicula:Movie)<-[:ADD]-(perfil:Profile)
-WITH pelicula, COUNT(*) AS vistas
-ORDER BY vistas DESC
-RETURN pelicula.title AS titulo, vistas
-LIMIT 5
-
-//Recomendación basada en año de lanzamamiento
-MATCH (year:Movie {releaseYear: 2021})-[:LISTED_IN]->(categoria:Category)<-[:LISTED_IN]-(pelicula:Movie)<-[:ADD]-(perfil:Profile)
-with pelicula, COUNT(*) as vistas
-ORDER BY vistas DESC
-RETURN pelicula.title as titulo, vistas
-LIMIT 5
-
 MATCH (p:Profile)-[:ADD]->(shared:Movie)
 MATCH (p)-[:ADD]->(om:Movie)
 WHERE shared > om 
@@ -77,6 +42,87 @@ SET r.qty = vistas_por_otro
 RETURN shared.title, om.title, r.qty
 
 //Recomendaciones
+
+//4.4.1 Recomendación basada en categoria
+MATCH (perfil:Profile)-[:ADD]->(pelicula:Movie)-[:LISTED_IN]->(categoria:Category)
+WITH categoria.name AS nombreCategoria, pelicula.title AS tituloPelicula, COUNT(*) AS totalVistas
+ORDER BY nombreCategoria, totalVistas DESC
+WITH nombreCategoria, COLLECT(tituloPelicula) AS listaPeliculas
+RETURN nombreCategoria AS categoria, listaPeliculas[0..5] AS peliculas
+
+//4.4.2 Recomendación basada en país
+MATCH (perfil:Profile)-[:ADD]->(pelicula:Movie)-[:FROM]->(pais:Country)
+WITH pais.name AS nombreCategoria, pelicula.title AS tituloPelicula, COUNT(*) AS totalVistas
+ORDER BY nombreCategoria, totalVistas DESC
+WITH nombreCategoria, COLLECT(tituloPelicula) AS listaPeliculas
+RETURN nombreCategoria AS categoria, listaPeliculas[0..5] AS peliculas
+
+//4.4.3 Recomendación basada en actor de mi elección
+MATCH (actor:Person {name: "Xolile Tshabalala"})-[:ACTED_IN]->(:Movie)-[:LISTED_IN]->(categoria:Category)<-[:LISTED_IN]-(pelicula:Movie)<-[:ADD]-(perfil:Profile)
+WITH pelicula, COUNT(*) AS vistas
+ORDER BY vistas DESC
+RETURN pelicula.title AS titulo, vistas
+LIMIT 5
+
+//4.4.4 Recomendación basada en director de mi elección
+MATCH (director:Person {name: "Alice Waddington"})-[:DIRECTED]->(:Movie)-[:LISTED_IN]->(categoria:Category)<-[:LISTED_IN]-(pelicula:Movie)<-[:ADD]-(perfil:Profile)
+WITH pelicula, COUNT(*) AS vistas
+ORDER BY vistas DESC
+RETURN pelicula.title AS titulo, vistas
+LIMIT 5
+
+//4.4.5 Recomendación basada en año de lanzamamiento
+MATCH (year:Movie {releaseYear: 2021})-[:LISTED_IN]->(categoria:Category)<-[:LISTED_IN]-(pelicula:Movie)<-[:ADD]-(perfil:Profile)
+with pelicula, COUNT(*) as vistas
+ORDER BY vistas DESC
+RETURN pelicula.title as titulo, vistas
+LIMIT 5
+
+//4.4.6 Recomendación basada en categoria específica
+MATCH (pelicula:Movie)-[:LISTED_IN]->(categoria:Category {name: "Sci-Fi & Fantasy"})<-[:LISTED_IN]-(:Movie)<-[:ADD]-(perfil:Profile)
+WITH pelicula, COUNT(*) AS vistas
+ORDER BY vistas DESC
+RETURN pelicula.title AS titulo, vistas
+LIMIT 5
+
+//4.4.7 Recomendación en donde hay más actores similares a una pelicula dada
+MATCH (m1:Movie {title: "Dhanak"})<-[:ACTED_IN]-(actor:Person)-[:ACTED_IN]->(m2:Movie)
+WHERE m1 <> m2
+WITH m2, COUNT(actor) AS actoresEnComun
+ORDER BY actoresEnComun DESC
+RETURN m2.title AS titulo, actoresEnComun
+LIMIT 5
+
+//4.4.8 Recomendación en según usuarios que guardaron la misma película
+MATCH (perfil:Profile)-[:ADD]->(p:Movie {title: "Black Island"})
+MATCH (perfil)-[:ADD]->(recomendada:Movie)
+WHERE recomendada <> p
+WITH recomendada, COUNT(*) AS vistas
+ORDER BY vistas DESC
+RETURN recomendada.title AS titulo, vistas
+LIMIT 5
+
+//4.4.9 Recomendación en usuarios que ven al mismo director
+MATCH (perfil:Profile)-[:ADD]->(vista:Movie)<-[:DIRECTED]-(director:Person {name: "Brent Dawes"})
+MATCH (director)-[:DIRECTED]->(recomendada:Movie)
+WITH recomendada, COUNT(*) AS popularidad
+ORDER BY popularidad DESC
+RETURN recomendada.title AS titulo, popularidad
+LIMIT 5
+
+//4.4.10 Recomendación en base a Ed King
+MATCH (actor:Person {name: "Ed King"})-[:ACTED_IN]->(:Movie)-[:LISTED_IN]->(categoria:Category)<-[:LISTED_IN]-(pelicula:Movie)<-[:ADD]-(perfil:Profile)
+WITH pelicula, COUNT(*) AS vistas
+ORDER BY vistas DESC
+RETURN pelicula.title AS titulo, vistas
+LIMIT 5
+
+//4.4.11 Recomendación basada en Inception
+MATCH (movie:Movie {title: "Inception"})-[:LISTED_IN]->(:Category)<-[:LISTED_IN]-(pelicula:Movie)<-[:ADD]-(perfil:Profile)
+WITH pelicula, COUNT(*) AS vistas
+ORDER BY vistas DESC
+RETURN pelicula.title AS titulo, vistas
+LIMIT 5
 
 //Creamos el subgrafo
 //Dirigido
